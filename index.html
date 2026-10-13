@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncParty - Video Watch Party</title>
     
+    <!-- For production, use Tailwind CLI or PostCSS. CDN used here for single-file deployment. -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -68,7 +68,10 @@
     <div id="login-view" class="w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl z-10 transition-all duration-500">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-white mb-2 flex justify-center items-center gap-3">
-                <i class="fa-solid fa-clapperboard text-blue-500"></i> SyncParty
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16v16H4z"/><path d="M4 8h16M8 4v4M16 4v4"/>
+                </svg>
+                SyncParty
             </h1>
             <p class="text-gray-400 text-sm">Watch videos in sync with your friends.</p>
         </div>
@@ -80,14 +83,20 @@
                 <div class="grid grid-cols-2 gap-4">
                     <label class="cursor-pointer">
                         <input type="radio" name="role" value="host" class="peer sr-only" checked>
-                        <div class="text-center p-3 rounded-lg border border-gray-700 bg-gray-800 peer-checked:bg-blue-600 peer-checked:border-blue-500 hover:bg-gray-700 transition-colors">
-                            <i class="fa-solid fa-crown mb-1"></i> Host
+                        <div class="text-center p-3 rounded-lg border border-gray-700 bg-gray-800 peer-checked:bg-blue-600 peer-checked:border-blue-500 hover:bg-gray-700 transition-colors flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 20h20M4 16l-2-12 5 4 5-8 5 8 5-4-2 12z"/>
+                            </svg>
+                            Host
                         </div>
                     </label>
                     <label class="cursor-pointer">
                         <input type="radio" name="role" value="member" class="peer sr-only">
-                        <div class="text-center p-3 rounded-lg border border-gray-700 bg-gray-800 peer-checked:bg-indigo-600 peer-checked:border-indigo-500 hover:bg-gray-700 transition-colors">
-                            <i class="fa-solid fa-user mb-1"></i> Member
+                        <div class="text-center p-3 rounded-lg border border-gray-700 bg-gray-800 peer-checked:bg-indigo-600 peer-checked:border-indigo-500 hover:bg-gray-700 transition-colors flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Member
                         </div>
                     </label>
                 </div>
@@ -123,28 +132,44 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 glass-panel p-4 rounded-xl">
             <div>
                 <h2 class="text-2xl font-bold flex items-center gap-2 text-white">
-                    <i class="fa-solid fa-satellite-dish text-green-400 animate-pulse text-sm"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-400 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="2"/><path d="M16 12a4 4 0 0 1-4 4"/><path d="M20 12a8 8 0 0 1-8 8"/><path d="M8 12a4 4 0 0 0 4 4"/><path d="M4 12a8 8 0 0 0 8 8"/>
+                    </svg>
                     Room: <span id="display-room-id" class="text-blue-400"></span>
                 </h2>
                 <p class="text-gray-400 text-sm mt-1">Logged in as: <span id="display-role" class="font-semibold text-white capitalize"></span></p>
             </div>
             <button id="leave-btn" class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Leave Room
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+                Leave Room
             </button>
         </div>
 
         <!-- Host Controls Panel (Hidden for Members) -->
         <div id="host-controls" class="hidden mb-6 glass-panel p-5 rounded-xl border-l-4 border-l-blue-500">
             <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-blue-400">
-                <i class="fa-solid fa-sliders"></i> Host Controls
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+                </svg>
+                Host Controls
             </h3>
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="video-url-input" placeholder="Paste public video URL (MP4, WebM, etc.)" class="flex-1 px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white outline-none">
-                <button id="set-video-btn" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors shadow-lg whitespace-nowrap">
-                    <i class="fa-solid fa-link"></i> Set Video
+                <button id="set-video-btn" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors shadow-lg whitespace-nowrap flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                    Set Video
                 </button>
             </div>
-            <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-circle-info"></i> Make sure the URL points directly to a playable video file, accessible publicly.</p>
+            <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                Make sure the URL points directly to a playable video file, accessible publicly.
+            </p>
         </div>
 
         <!-- Video Player Container -->
@@ -152,12 +177,13 @@
             
             <!-- Idle / No Video overlay -->
             <div id="no-video-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-gray-900/90 backdrop-blur-sm">
-                <i class="fa-solid fa-film text-6xl text-gray-600 mb-4"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+                </svg>
                 <p class="text-gray-400 text-lg">Waiting for host to set a video...</p>
             </div>
 
             <!-- The actual video element -->
-            <!-- We use preload="auto" to start buffering in browser immediately when source is set -->
             <video id="sync-video" class="w-full h-full object-contain" controls preload="auto" playsinline>
                 Your browser does not support HTML5 video.
             </video>
@@ -169,12 +195,12 @@
                 <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
                 <span>Sync Active</span>
             </div>
-            <div id="last-sync-time">Synchronized</div>
+            <div id="last-sync-time">Synchronized Room</div>
         </div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIGURATION (Exact config provided) ---
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyCqJ9pqMpjME0NgTe_PnKwigD-oKT1Lzh8",
             authDomain: "tictactoe-office.firebaseapp.com",
@@ -288,7 +314,7 @@
                 }
             } catch (err) {
                 console.error("Firebase Error:", err);
-                showError("Database error. Please check configuration.");
+                showError("Database error. Please check configuration and network.");
             }
             
             setLoading(false);
@@ -354,7 +380,6 @@
             }
         });
 
-
         // --- FIREBASE SYNC LOGIC (RECEIVING) ---
         function setupFirebaseListeners() {
             roomRef.on('value', (snapshot) => {
@@ -366,18 +391,19 @@
                     noVideoOverlay.classList.add('hidden');
                     if (videoPlayer.src !== data.url) {
                         videoPlayer.src = data.url;
-                        // On new source, video load triggers, keep it paused initially as per DB state
+                        // Keep paused initially on new load
+                        ignorePauseEvent = true;
+                        videoPlayer.pause();
                     }
                 } else {
                     noVideoOverlay.classList.remove('hidden');
                 }
 
-                if (!data.url) return; // Wait until a URL is set to sync time/playback
+                if (!data.url) return; // Wait until a URL is set
 
                 // 2. Sync Time (Seek)
-                // Use a small tolerance (1.5 seconds) to avoid jittering from minor async delays
+                // Tolerance to avoid jitter from minor delays
                 if (Math.abs(videoPlayer.currentTime - data.time) > 1.5) {
-                    // Set flag so our local DOM seeked listener doesn't immediately send a DB update back
                     ignoreSeekEvent = true; 
                     videoPlayer.currentTime = data.time;
                 }
@@ -386,8 +412,8 @@
                 if (data.isPlaying && videoPlayer.paused) {
                     ignorePlayEvent = true;
                     videoPlayer.play().catch(e => {
-                        console.error("Autoplay blocked by browser. User interaction needed.", e);
-                        ignorePlayEvent = false; // Reset if failed
+                        console.warn("Autoplay interaction required by browser.");
+                        ignorePlayEvent = false; 
                     });
                 } else if (!data.isPlaying && !videoPlayer.paused) {
                     ignorePauseEvent = true;
@@ -395,7 +421,6 @@
                 }
             });
         }
-
 
         // --- VIDEO DOM EVENT LOGIC (SENDING) ---
         
@@ -409,11 +434,10 @@
         // Listen for Play Event
         videoPlayer.addEventListener('play', () => {
             if (ignorePlayEvent) {
-                // This play was triggered programmatically by Firebase, ignore it.
                 ignorePlayEvent = false;
                 return;
             }
-            // User initiated play, notify everyone
+            // User initiated play, sync for all
             updateRoomState({
                 isPlaying: true,
                 time: videoPlayer.currentTime
@@ -423,11 +447,10 @@
         // Listen for Pause Event
         videoPlayer.addEventListener('pause', () => {
             if (ignorePauseEvent) {
-                // This pause was triggered programmatically by Firebase, ignore it.
                 ignorePauseEvent = false;
                 return;
             }
-            // User initiated pause (or video ended), notify everyone
+            // User initiated pause, sync for all
             updateRoomState({
                 isPlaying: false,
                 time: videoPlayer.currentTime
@@ -435,20 +458,18 @@
         });
 
         // Listen for Seek Event
-        // 'seeked' fires when the user finishes scrubbing/jumping.
         videoPlayer.addEventListener('seeked', () => {
             if (ignoreSeekEvent) {
-                // This seek was triggered programmatically by Firebase, ignore it.
                 ignoreSeekEvent = false;
                 return;
             }
-            // User scrubbed the timeline, notify everyone
+            // User scrubbed timeline, sync for all
             updateRoomState({
                 time: videoPlayer.currentTime
             });
         });
         
-        // Handle window unload/disconnection gracefully if needed
+        // Disconnect gracefully
         window.addEventListener('beforeunload', () => {
             if (roomRef) {
                 roomRef.off();
