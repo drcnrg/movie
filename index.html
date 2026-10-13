@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncParty - Watch Together</title>
     
-    <!-- Tailwind CSS (CDN for single-file deployment) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase SDKs (v8 compat) -->
@@ -13,9 +13,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        /* Netflix-style dark theme scrollbar */
+        /* Netflix-style dark theme scrollbar & base */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
         ::-webkit-scrollbar-track {
             background: #141414;
@@ -29,15 +30,16 @@
         }
         
         body {
-            background-color: #141414; /* Netflix dark gray/black */
+            background-color: #141414; /* Netflix dark base */
             color: #e5e5e5;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
         .glass-panel {
             background: rgba(20, 20, 20, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         /* Spinner Animation */
@@ -51,28 +53,38 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Video specific styles to ensure it fills but maintains aspect ratio */
         video {
             background-color: #000;
             outline: none;
         }
+
+        /* Smooth UI Transitions */
+        .fade-enter {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .fade-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 300ms, transform 300ms;
+        }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+<body class="antialiased min-h-screen flex flex-col items-center justify-center relative overflow-x-hidden">
 
-    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
         <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-red-900/10 blur-[150px]"></div>
         <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-red-900/10 blur-[150px]"></div>
     </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-80 max-w-full px-4"></div>
 
-    <div id="login-view" class="w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl z-10 transition-all duration-500 border-t-4 border-t-red-600">
+    <div id="login-view" class="w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl z-10 transition-all duration-500 border-t-4 border-t-red-600 w-11/12 mx-auto">
         <div class="text-center mb-8">
             <h1 class="text-4xl font-black text-white mb-2 flex justify-center items-center gap-3 tracking-wide">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M2.75 3h18.5c.966 0 1.75.784 1.75 1.75v14.5A1.75 1.75 0 0 1 21.25 21H2.75A1.75 1.75 0 0 1 1 19.25V4.75C1 3.784 1.784 3 2.75 3zm18.5 1.5H2.75a.25.25 0 0 0-.25.25v14.5c0 .138.112.25.25.25h18.5a.25.25 0 0 0 .25-.25V4.75a.25.25 0 0 0-.25-.25zM10.25 8.5l6.5 3.5-6.5 3.5v-7z"/>
+                <!-- Sync Icon SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2.75 3h18.5c.966 0 1.75.784 1.75 1.75v14.5A1.75 1.75 0 0 1 21.25 21H2.75A1.75 1.75 0 0 1 1 19.25V4.75C1 3.784 1.784 3 2.75 3zm18.5 1.5H2.75a.25.25 0 0 0-.25.25v14.5c0 .138.112.25.25.25h18.5a.25.25 0 0 0 .25-.25V4.75a.25.25 0 0 0-.25-.25zM10.25 8.5l6.5 3.5-6.5 3.5v-7z" fill="currentColor"/>
                 </svg>
                 SYNC<span class="text-red-600">PARTY</span>
             </h1>
@@ -86,38 +98,39 @@
                 <div class="grid grid-cols-2 gap-4">
                     <label class="cursor-pointer">
                         <input type="radio" name="role" value="host" class="peer sr-only" checked>
-                        <div class="text-center p-4 rounded-xl border border-gray-700 bg-gray-900 peer-checked:bg-red-900/30 peer-checked:border-red-600 peer-checked:text-red-500 hover:bg-gray-800 transition-all flex flex-col items-center justify-center group">
+                        <div class="text-center p-4 rounded-xl border border-gray-700 bg-[#1a1a1a] peer-checked:bg-red-900/20 peer-checked:border-red-600 peer-checked:text-red-500 hover:bg-[#222] transition-all flex flex-col items-center justify-center group h-24">
+                            <!-- Host Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 mb-2 text-gray-400 group-hover:text-red-500 peer-checked:text-red-500 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 20h20M4 16l-2-12 5 4 5-8 5 8 5-4-2 12z"/>
                             </svg>
-                            <span class="font-semibold">Host</span>
+                            <span class="font-semibold text-sm">Host</span>
                         </div>
                     </label>
                     <label class="cursor-pointer">
                         <input type="radio" name="role" value="member" class="peer sr-only">
-                        <div class="text-center p-4 rounded-xl border border-gray-700 bg-gray-900 peer-checked:bg-gray-800 peer-checked:border-white peer-checked:text-white hover:bg-gray-800 transition-all flex flex-col items-center justify-center group">
+                        <div class="text-center p-4 rounded-xl border border-gray-700 bg-[#1a1a1a] peer-checked:bg-gray-800 peer-checked:border-white peer-checked:text-white hover:bg-[#222] transition-all flex flex-col items-center justify-center group h-24">
+                            <!-- Member Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 mb-2 text-gray-400 group-hover:text-white peer-checked:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                             </svg>
-                            <span class="font-semibold">Member</span>
+                            <span class="font-semibold text-sm">Member</span>
                         </div>
                     </label>
                 </div>
             </div>
 
-            <!-- Room Credentials -->
+            <!-- Credentials -->
             <div class="space-y-4">
                 <div>
                     <label for="room-id" class="block text-sm font-medium text-gray-400 mb-1">Room ID</label>
-                    <input type="text" id="room-id" placeholder="e.g., movie-night-123" class="w-full px-4 py-3 rounded-lg bg-gray-900 border border-gray-700 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white placeholder-gray-600 transition-colors outline-none">
+                    <input type="text" id="room-id" placeholder="e.g., movie-night-123" class="w-full px-4 py-3 rounded-lg bg-[#111] border border-gray-700 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white placeholder-gray-600 transition-colors outline-none">
                 </div>
                 <div>
                     <label for="room-password" class="block text-sm font-medium text-gray-400 mb-1">Room Password</label>
-                    <input type="password" id="room-password" placeholder="Enter secure password" class="w-full px-4 py-3 rounded-lg bg-gray-900 border border-gray-700 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white placeholder-gray-600 transition-colors outline-none">
+                    <input type="password" id="room-password" placeholder="Enter secure password" class="w-full px-4 py-3 rounded-lg bg-[#111] border border-gray-700 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white placeholder-gray-600 transition-colors outline-none">
                 </div>
             </div>
 
-            <!-- Action Button -->
             <button id="join-btn" class="w-full py-4 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transform transition active:scale-[0.98] focus:outline-none flex justify-center items-center gap-2">
                 <span>Enter Room</span>
                 <div id="join-spinner" class="hidden w-5 h-5 border-2 border-white border-solid rounded-full loader"></div>
@@ -125,44 +138,47 @@
         </div>
     </div>
 
-    <div id="room-view" class="hidden w-full h-screen mx-auto flex flex-col z-10 transition-all duration-500 bg-[#141414]">
+    <div id="room-view" class="hidden w-full h-screen flex flex-col z-10 transition-all duration-500 bg-[#141414]">
         
         <!-- Navbar -->
-        <header class="flex justify-between items-center px-6 py-4 bg-gradient-to-b from-black/80 to-transparent">
-            <div class="flex items-center gap-4">
-                <h2 class="text-xl font-black text-white flex items-center gap-2 tracking-wide">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+        <header class="flex justify-between items-center px-4 md:px-6 py-3 bg-gradient-to-b from-black to-transparent border-b border-gray-800/50">
+            <div class="flex items-center gap-3 md:gap-4">
+                <h2 class="text-lg md:text-xl font-black text-white flex items-center gap-2 tracking-wide hidden sm:flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M2.75 3h18.5c.966 0 1.75.784 1.75 1.75v14.5A1.75 1.75 0 0 1 21.25 21H2.75A1.75 1.75 0 0 1 1 19.25V4.75C1 3.784 1.784 3 2.75 3zm18.5 1.5H2.75a.25.25 0 0 0-.25.25v14.5c0 .138.112.25.25.25h18.5a.25.25 0 0 0 .25-.25V4.75a.25.25 0 0 0-.25-.25zM10.25 8.5l6.5 3.5-6.5 3.5v-7z"/>
                     </svg>
                     SYNC<span class="text-red-600">PARTY</span>
                 </h2>
-                <div class="h-6 w-px bg-gray-700"></div>
-                <div class="flex items-center gap-2">
+                <div class="h-6 w-px bg-gray-700 hidden sm:block"></div>
+                <div class="flex items-center gap-2 bg-gray-900/80 px-3 py-1.5 rounded-md border border-gray-800">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></div>
-                    <span id="display-room-id" class="font-mono text-sm text-gray-300"></span>
+                    <span id="display-room-id" class="font-mono text-xs md:text-sm text-gray-300"></span>
                 </div>
             </div>
             
-            <div class="flex items-center gap-4">
-                <span id="display-role" class="text-xs font-bold uppercase px-2 py-1 bg-gray-800 rounded border border-gray-700"></span>
-                <button id="leave-btn" class="px-4 py-2 hover:bg-gray-800 text-gray-300 hover:text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium">
+            <div class="flex items-center gap-3">
+                <span id="display-role" class="text-[10px] md:text-xs font-bold uppercase px-2 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700"></span>
+                <button id="leave-btn" class="px-3 py-1.5 md:px-4 md:py-2 hover:bg-gray-800 text-gray-300 hover:text-white rounded-lg transition-colors flex items-center gap-2 text-xs md:text-sm font-medium border border-transparent hover:border-gray-700">
                     Exit
                 </button>
             </div>
         </header>
 
-        <div class="flex-1 flex flex-col px-4 md:px-8 pb-8 max-w-screen-2xl mx-auto w-full gap-4">
+        <div class="flex-1 flex flex-col p-2 md:p-6 lg:p-8 w-full max-w-screen-2xl mx-auto gap-4 md:gap-6 min-h-0">
             
-            <!-- Host Controls (Hidden for Members) -->
-            <div id="host-controls" class="hidden glass-panel p-4 rounded-xl border border-gray-800 shrink-0">
-                <div class="flex flex-col sm:flex-row gap-3 items-end">
+            <!-- Host Controls -->
+            <div id="host-controls" class="hidden glass-panel p-3 md:p-4 rounded-xl border border-gray-800 shrink-0 w-full">
+                <div class="flex flex-col sm:flex-row gap-2 md:gap-3 items-end">
                     <div class="flex-1 w-full">
-                        <label for="video-url-input" class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wider">Set Video Source</label>
-                        <input type="text" id="video-url-input" placeholder="Paste Direct Link, Supabase URL, or Google Drive Link" class="w-full px-4 py-3 rounded-lg bg-black border border-gray-700 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white outline-none font-mono text-sm">
+                        <label for="video-url-input" class="block text-[10px] md:text-xs font-semibold text-gray-400 mb-1 md:mb-1.5 uppercase tracking-wider">Set Video Source (Drive/Direct Link)</label>
+                        <div class="relative">
+                            <input type="text" id="video-url-input" placeholder="Paste URL to broadcast to room..." class="w-full pl-10 pr-4 py-2.5 md:py-3 rounded-lg bg-black border border-gray-700 focus:border-red-600 focus:ring-1 focus:ring-red-600 text-white outline-none font-mono text-sm shadow-inner">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        </div>
                     </div>
-                    <button id="set-video-btn" class="w-full sm:w-auto px-8 py-3 bg-white hover:bg-gray-200 text-black font-bold rounded-lg transition-colors shadow-lg whitespace-nowrap flex items-center justify-center gap-2">
+                    <button id="set-video-btn" class="w-full sm:w-auto px-6 py-2.5 md:py-3 bg-white hover:bg-gray-200 text-black font-bold rounded-lg transition-colors shadow-lg whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 text-sm md:text-base">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
                         Load Media
                     </button>
@@ -170,33 +186,40 @@
             </div>
 
             <!-- Video Player Area -->
-            <div class="flex-1 relative rounded-xl overflow-hidden bg-black shadow-2xl border border-gray-800 group flex items-center justify-center">
+            <div class="flex-1 relative rounded-xl md:rounded-2xl overflow-hidden bg-black shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-gray-800 group flex items-center justify-center min-h-0 w-full">
                 
                 <!-- Idle State Overlay -->
-                <div id="no-video-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-20 bg-[#141414]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-700 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <div id="no-video-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-20 bg-[#141414] transition-opacity duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-700 mb-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                     </svg>
-                    <p class="text-gray-500 text-lg font-medium" id="idle-text">Awaiting Host to load media...</p>
+                    <p class="text-gray-500 text-base md:text-lg font-medium text-center px-4" id="idle-text">Awaiting Host to load media...</p>
                 </div>
 
                 <!-- Download Progress Overlay -->
-                <div id="download-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-30 bg-black/90 backdrop-blur-md hidden">
-                    <div class="w-64 max-w-full p-6 glass-panel rounded-xl text-center border border-gray-800">
+                <div id="download-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-30 bg-black/90 backdrop-blur-sm hidden transition-opacity duration-300">
+                    <div class="w-80 max-w-[90%] p-6 glass-panel rounded-xl text-center border border-gray-800 shadow-2xl">
+                        <!-- Cloud Download Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-red-600 mx-auto mb-4 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
-                        <h3 class="text-white font-bold mb-2">Downloading Media</h3>
-                        <div class="w-full bg-gray-800 rounded-full h-2 mb-2 overflow-hidden">
-                            <div id="download-progress-bar" class="bg-red-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        <h3 class="text-white font-bold mb-2">Buffering / Downloading</h3>
+                        <div class="w-full bg-gray-800 rounded-full h-2.5 mb-2 overflow-hidden shadow-inner">
+                            <div id="download-progress-bar" class="bg-red-600 h-full rounded-full transition-all duration-200 w-0 relative">
+                                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </div>
                         </div>
-                        <p id="download-text" class="text-xs text-gray-400 font-mono">0% (Initializing...)</p>
-                        <p class="text-[10px] text-gray-600 mt-4 leading-tight">If download fails (e.g. CORS), it will automatically fallback to direct streaming.</p>
+                        <p id="download-text" class="text-sm text-gray-300 font-mono">0% (Connecting...)</p>
+                        
+                        <div id="proxy-warning" class="hidden mt-4 bg-yellow-900/30 border border-yellow-700/50 p-2 rounded text-xs text-yellow-500 flex items-start gap-2 text-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>CORS Blocked. Using proxy relay...</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Actual Video Element -->
-                <video id="sync-video" class="w-full h-full object-contain" controls preload="auto" playsinline>
+                <video id="sync-video" class="w-full h-full max-h-full object-contain" controls preload="metadata" playsinline>
                     Your browser does not support HTML5 video.
                 </video>
             </div>
@@ -205,51 +228,54 @@
 
     <script>
         // --- LOGGING UTILITY ---
-        function appLog(context, message, data = null) {
-            const timestamp = new Date().toISOString().split('T')[1].slice(0,-1);
-            const formattedMessage = `[${timestamp}] [${context}] ${message}`;
+        function appLog(category, message, data = null) {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, fractionalSecondDigits: 3 });
+            const logStr = `[${time}] [${category}] ${message}`;
             if (data) {
-                console.log(formattedMessage, data);
+                console.log(logStr, data);
             } else {
-                console.log(formattedMessage);
+                console.log(logStr);
             }
         }
 
-        // --- UI UTILITY ---
+        // --- UI TOAST UTILITY ---
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             
-            let bgClass = 'bg-gray-800 border-gray-700 text-white';
-            let icon = `<svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            let styleClasses = 'bg-gray-800 border-gray-700 text-white';
+            let iconSvg = `<svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
 
             if (type === 'error') {
-                bgClass = 'bg-red-950 border-red-900 text-red-100';
-                icon = `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                styleClasses = 'bg-red-950 border-red-900 text-red-100';
+                iconSvg = `<svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
             } else if (type === 'success') {
-                bgClass = 'bg-green-950 border-green-900 text-green-100';
-                icon = `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                styleClasses = 'bg-green-950 border-green-900 text-green-100';
+                iconSvg = `<svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            } else if (type === 'warning') {
+                styleClasses = 'bg-yellow-950 border-yellow-900 text-yellow-100';
+                iconSvg = `<svg class="w-5 h-5 text-yellow-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
             }
 
-            toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg border shadow-xl transform transition-all duration-300 translate-x-full opacity-0 ${bgClass}`;
-            toast.innerHTML = `${icon} <span class="text-sm font-medium">${message}</span>`;
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg border shadow-xl transform transition-all duration-300 translate-x-full opacity-0 ${styleClasses}`;
+            toast.innerHTML = `${iconSvg} <span class="text-sm font-medium leading-snug">${message}</span>`;
             
             container.appendChild(toast);
             
-            // Animate in
-            setTimeout(() => {
+            // Trigger animation
+            requestAnimationFrame(() => {
                 toast.classList.remove('translate-x-full', 'opacity-0');
-            }, 10);
+            });
 
-            // Animate out and remove
+            // Cleanup
             setTimeout(() => {
                 toast.classList.add('translate-x-full', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
-            }, 5000);
+            }, 4000);
         }
 
-        // --- FIREBASE CONFIGURATION ---
-        appLog('Init', 'Setting up Firebase...');
+        // --- STREAMING_CHUNK:Firebase Initialization ---
+        appLog('Firebase', 'Initializing Database...');
         const firebaseConfig = {
             apiKey: "AIzaSyCqJ9pqMpjME0NgTe_PnKwigD-oKT1Lzh8",
             authDomain: "tictactoe-office.firebaseapp.com",
@@ -259,80 +285,72 @@
 
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
-            appLog('Init', 'Firebase initialized.');
         }
         const db = firebase.database();
+        appLog('Firebase', 'Database ready.');
 
-        // --- STREAMING_CHUNK:Global State Variables ---
+        // --- GLOBAL STATE ---
         let currentRole = null;
         let currentRoomId = null;
         let roomRef = null;
-        let currentObjectUrl = null; // Store Blob URL to revoke memory later
-        let currentVideoSource = null; // Store the original raw URL
+        let currentObjectUrl = null; 
+        let currentVideoSource = null; 
         
-        // Anti-Infinite Loop Flags (Strict Sync Engine)
+        // --- SYNCHRONIZATION FLAGS ---
+        // Crucial to prevent infinite loops when updating the local video player based on remote Firebase events
         let isRemoteUpdatingPlay = false;
         let isRemoteUpdatingPause = false;
         let isRemoteUpdatingSeek = false;
 
-        // DOM Elements
-        const views = {
-            login: document.getElementById('login-view'),
-            room: document.getElementById('room-view')
-        };
-        const inputs = {
-            roomId: document.getElementById('room-id'),
-            roomPass: document.getElementById('room-password'),
-            videoUrl: document.getElementById('video-url-input')
-        };
-        const btns = {
-            join: document.getElementById('join-btn'),
-            leave: document.getElementById('leave-btn'),
-            setVideo: document.getElementById('set-video-btn')
-        };
-        const display = {
-            roomId: document.getElementById('display-room-id'),
-            role: document.getElementById('display-role'),
-            hostControls: document.getElementById('host-controls')
-        };
-        const player = {
-            video: document.getElementById('sync-video'),
-            noVideoOver: document.getElementById('no-video-overlay'),
-            dlOver: document.getElementById('download-overlay'),
-            dlBar: document.getElementById('download-progress-bar'),
-            dlText: document.getElementById('download-text'),
-            idleText: document.getElementById('idle-text')
+        // DOM Elements Map
+        const els = {
+            views: { login: document.getElementById('login-view'), room: document.getElementById('room-view') },
+            inputs: { roomId: document.getElementById('room-id'), pass: document.getElementById('room-password'), url: document.getElementById('video-url-input') },
+            btns: { join: document.getElementById('join-btn'), leave: document.getElementById('leave-btn'), setVid: document.getElementById('set-video-btn') },
+            display: { roomId: document.getElementById('display-room-id'), role: document.getElementById('display-role'), hostPanel: document.getElementById('host-controls') },
+            player: { 
+                vid: document.getElementById('sync-video'), 
+                idleOverlay: document.getElementById('no-video-overlay'),
+                dlOverlay: document.getElementById('download-overlay'),
+                dlBar: document.getElementById('download-progress-bar'),
+                dlText: document.getElementById('download-text'),
+                proxyWarn: document.getElementById('proxy-warning'),
+                idleText: document.getElementById('idle-text')
+            }
         };
 
-        // --- STREAMING_CHUNK:Auth & Room Logic ---
+        // --- STREAMING_CHUNK:Authentication & Room Logic ---
 
-        function setJoinLoading(isLoading) {
-            const spinner = document.getElementById('join-spinner');
+        function toggleLoadingState(btn, spinnerId, isLoading, text) {
+            const spinner = document.getElementById(spinnerId);
+            const span = btn.querySelector('span');
             if (isLoading) {
                 spinner.classList.remove('hidden');
-                btns.join.disabled = true;
-                btns.join.classList.add('opacity-75');
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                if (text) span.textContent = text;
             } else {
                 spinner.classList.add('hidden');
-                btns.join.disabled = false;
-                btns.join.classList.remove('opacity-75');
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                if (text) span.textContent = text;
             }
         }
 
-        btns.join.addEventListener('click', async () => {
-            const roomId = inputs.roomId.value.trim();
-            const password = inputs.roomPass.value;
+        els.btns.join.addEventListener('click', async () => {
+            const roomId = els.inputs.roomId.value.trim().toLowerCase();
+            const pass = els.inputs.pass.value;
             const role = document.querySelector('input[name="role"]:checked').value;
 
-            appLog('Auth', `Attempting to join room: ${roomId} as ${role}`);
-
-            if (!roomId || !password) {
-                showToast("Room ID and Password are required.", "error");
+            if (!roomId || !pass) {
+                showToast("Please provide both Room ID and Password.", "error");
                 return;
             }
 
-            setJoinLoading(true);
-            const ref = db.ref(`rooms/${roomId}`);
+            toggleLoadingState(els.btns.join, 'join-spinner', true, 'Connecting...');
+            appLog('Auth', `Attempting login - Room: ${roomId} | Role: ${role}`);
+
+            const ref = db.ref(`syncRooms/${roomId}`);
 
             try {
                 const snapshot = await ref.once('value');
@@ -340,313 +358,340 @@
 
                 if (role === 'host') {
                     if (roomData) {
-                        if (roomData.password === password) {
-                            appLog('Auth', 'Host joined existing room successfully.');
+                        if (roomData.password === pass) {
+                            appLog('Auth', 'Host verified successfully.');
                             enterRoom(roomId, role);
                         } else {
-                            showToast("Incorrect password for existing room.", "error");
-                            appLog('Auth', 'Host failed: Incorrect password.');
+                            showToast("Incorrect password for this room.", "error");
+                            appLog('Auth', 'Host failed: Wrong password.');
                         }
                     } else {
-                        appLog('Auth', 'Creating new room...');
+                        appLog('Auth', 'Room not found. Creating new room as Host...');
                         await ref.set({
-                            password: password,
+                            password: pass,
                             url: '',
                             isPlaying: false,
                             time: 0,
                             lastUpdated: firebase.database.ServerValue.TIMESTAMP
                         });
                         enterRoom(roomId, role);
+                        showToast("New Room Created Successfully", "success");
                     }
                 } else if (role === 'member') {
                     if (roomData) {
-                        if (roomData.password === password) {
-                            appLog('Auth', 'Member joined successfully.');
+                        if (roomData.password === pass) {
+                            appLog('Auth', 'Member verified successfully.');
                             enterRoom(roomId, role);
                         } else {
                             showToast("Incorrect password.", "error");
-                            appLog('Auth', 'Member failed: Incorrect password.');
+                            appLog('Auth', 'Member failed: Wrong password.');
                         }
                     } else {
-                        showToast("Room does not exist. Ask host to create it.", "error");
-                        appLog('Auth', 'Member failed: Room not found.');
+                        showToast("Room doesn't exist. Wait for Host to create it.", "error");
+                        appLog('Auth', 'Member failed: Room missing.');
                     }
                 }
             } catch (err) {
-                appLog('Auth', 'Firebase Error', err);
-                showToast("Database error. Check network connection.", "error");
+                appLog('Firebase', 'Database operation failed.', err);
+                showToast("Network or database error.", "error");
             }
             
-            setJoinLoading(false);
+            toggleLoadingState(els.btns.join, 'join-spinner', false, 'Enter Room');
         });
 
         function enterRoom(roomId, role) {
             currentRoomId = roomId;
             currentRole = role;
-            roomRef = db.ref(`rooms/${roomId}`);
+            roomRef = db.ref(`syncRooms/${roomId}`);
 
-            // Transition UI
-            views.login.classList.add('hidden');
-            views.room.classList.remove('hidden');
-            display.roomId.textContent = roomId;
-            display.role.textContent = role;
+            // UI Switch
+            els.views.login.classList.add('hidden');
+            els.views.room.classList.remove('hidden');
+            
+            els.display.roomId.textContent = roomId.toUpperCase();
+            els.display.role.textContent = role;
 
             if (role === 'host') {
-                display.hostControls.classList.remove('hidden');
-                player.idleText.textContent = "Waiting for you to set a video source...";
+                els.display.hostPanel.classList.remove('hidden');
+                els.player.idleText.textContent = "Waiting for you to set a video source...";
             } else {
-                display.hostControls.classList.add('hidden');
-                player.idleText.textContent = "Awaiting Host to load media...";
+                els.display.hostPanel.classList.add('hidden');
+                els.player.idleText.textContent = "Awaiting Host to load media...";
             }
 
-            appLog('Room', `Entered room ${roomId}`);
-            setupFirebaseListeners();
+            appLog('Room', `Joined successfully as ${role}`);
+            initFirebaseSyncListeners();
         }
 
-        btns.leave.addEventListener('click', () => {
-            appLog('Room', 'Leaving room...');
-            if (roomRef) roomRef.off();
+        els.btns.leave.addEventListener('click', () => {
+            appLog('Room', 'Exiting room.');
+            if (roomRef) roomRef.off(); // Detach listeners
             
-            player.video.pause();
-            player.video.src = "";
-            player.video.removeAttribute('src'); // Clean up DOM
-            
-            // Revoke memory if we downloaded a blob
-            if (currentObjectUrl) {
-                URL.revokeObjectURL(currentObjectUrl);
-                currentObjectUrl = null;
-            }
+            resetPlayerState();
             
             currentRoomId = null;
             currentRole = null;
             roomRef = null;
             currentVideoSource = null;
             
-            views.room.classList.add('hidden');
-            views.login.classList.remove('hidden');
-            player.noVideoOver.classList.remove('hidden');
-            inputs.roomId.value = '';
-            inputs.roomPass.value = '';
+            els.views.room.classList.add('hidden');
+            els.views.login.classList.remove('hidden');
+            els.inputs.roomId.value = '';
+            els.inputs.pass.value = '';
         });
 
-        // --- STREAMING_CHUNK:URL Processing & Download Engine ---
+        function resetPlayerState() {
+            els.player.vid.pause();
+            els.player.vid.removeAttribute('src');
+            els.player.idleOverlay.classList.remove('hidden');
+            els.player.dlOverlay.classList.add('hidden');
+            
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+                currentObjectUrl = null;
+                appLog('Memory', 'Revoked Blob URL');
+            }
+        }
 
-        function processDriveUrl(url) {
-            // Converts Google Drive view links to direct download/stream links
+        // --- STREAMING_CHUNK:CORS Bypass & Download Engine ---
+
+        function formatUrlForDrive(url) {
+            // Converts GDrive links to download format
             if (url.includes('drive.google.com/file/d/')) {
                 const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (match && match[1]) {
-                    const newUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
-                    appLog('URL', `Converted Drive URL to direct link: ${newUrl}`);
-                    return newUrl;
+                    const dlUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+                    appLog('URL', `Parsed Drive URL -> ${dlUrl}`);
+                    return dlUrl;
                 }
             }
             return url;
         }
 
-        async function loadVideoWithFallback(url) {
-            // Prevent redundant processing if it's the same URL
-            if (currentVideoSource === url) return;
-            
-            currentVideoSource = url;
-            player.noVideoOver.classList.add('hidden');
-            
-            // Clean up previous blob if exists
-            if (currentObjectUrl) {
-                URL.revokeObjectURL(currentObjectUrl);
-                currentObjectUrl = null;
+        async function fetchStreamWithProgress(targetUrl) {
+            const response = await fetch(targetUrl);
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+            const contentLength = response.headers.get('content-length');
+            appLog('Download', `Content-Length header: ${contentLength}`);
+
+            if (!contentLength) {
+                els.player.dlText.textContent = 'Buffering stream... (Size unknown)';
+                els.player.dlBar.style.width = '100%';
             }
 
-            const processedUrl = processDriveUrl(url);
+            const reader = response.body.getReader();
+            const total = parseInt(contentLength, 10);
+            let loaded = 0;
+            const chunks = [];
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                chunks.push(value);
+                loaded += value.length;
+
+                if (total) {
+                    const percent = (loaded / total) * 100;
+                    els.player.dlBar.style.width = `${percent}%`;
+                    els.player.dlText.textContent = `${percent.toFixed(1)}%`;
+                }
+            }
+
+            const blob = new Blob(chunks);
+            return URL.createObjectURL(blob);
+        }
+
+        async function executeMultiStageDownload(rawUrl) {
+            if (currentVideoSource === rawUrl) {
+                appLog('Download', 'URL unchanged, ignoring download trigger.');
+                return;
+            }
             
-            // Reset UI
-            player.dlOver.classList.remove('hidden');
-            player.dlBar.style.width = '0%';
-            player.dlText.textContent = '0% (Connecting...)';
-            appLog('Download', `Attempting to fetch and download: ${processedUrl}`);
+            currentVideoSource = rawUrl;
+            resetPlayerState(); // clear old blob & show/hide overlays
+            
+            els.player.idleOverlay.classList.add('hidden');
+            els.player.dlOverlay.classList.remove('hidden');
+            els.player.proxyWarn.classList.add('hidden');
+            els.player.dlBar.style.width = '0%';
+            els.player.dlText.textContent = '0% (Initializing...)';
+
+            const processedUrl = formatUrlForDrive(rawUrl);
 
             try {
-                // Attempt Fetch API for download progress
-                const response = await fetch(processedUrl);
+                // STAGE 1: Direct Fetch Attempt (Will likely hit CORS on Drive/Supabase)
+                appLog('Download', `[Stage 1] Attempting Direct Fetch: ${processedUrl}`);
+                currentObjectUrl = await fetchStreamWithProgress(processedUrl);
+                appLog('Download', `[Stage 1] Success! Blob created.`);
+                applyVideoSource(currentObjectUrl);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const contentLength = response.headers.get('content-length');
-                appLog('Download', `Content-Length: ${contentLength ? (contentLength/1024/1024).toFixed(2) + ' MB' : 'Unknown'}`);
-
-                if (!contentLength) {
-                    // Indeterminate progress
-                    player.dlText.textContent = 'Downloading... (Size unknown)';
-                    player.dlBar.style.width = '100%';
-                    player.dlBar.classList.add('animate-pulse');
-                }
-
-                const reader = response.body.getReader();
-                const total = parseInt(contentLength, 10);
-                let loaded = 0;
-                const chunks = [];
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+            } catch (errDirect) {
+                appLog('Download', `[Stage 1] Direct Fetch Failed (CORS/Network):`, errDirect);
+                els.player.proxyWarn.classList.remove('hidden');
+                
+                try {
+                    // STAGE 2: CORS Proxy Bypass
+                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(processedUrl);
+                    appLog('Proxy', `[Stage 2] Attempting Proxy Fetch: ${proxyUrl}`);
                     
-                    chunks.push(value);
-                    loaded += value.length;
+                    // Reset UI slightly for phase 2
+                    els.player.dlBar.style.width = '0%';
+                    els.player.dlText.textContent = 'Proxy Routing...';
+                    
+                    currentObjectUrl = await fetchStreamWithProgress(proxyUrl);
+                    appLog('Proxy', `[Stage 2] Proxy Success! Blob created.`);
+                    applyVideoSource(currentObjectUrl);
 
-                    if (total) {
-                        const progress = (loaded / total) * 100;
-                        player.dlBar.style.width = `${progress}%`;
-                        player.dlText.textContent = `${progress.toFixed(1)}%`;
-                    }
+                } catch (errProxy) {
+                    appLog('Proxy', `[Stage 2] Proxy Fetch Failed (Too large or blocked):`, errProxy);
+                    
+                    // STAGE 3: Final Fallback - Direct HTML5 Src (Browser handles CORS for streams natively but hides progress)
+                    appLog('Fallback', `[Stage 3] Falling back to native <video src> streaming.`);
+                    showToast("Download restricted. Switching to live stream mode.", "warning");
+                    
+                    // Hide download UI since we can't track native tag progress reliably across domains
+                    els.player.dlOverlay.classList.add('hidden');
+                    applyVideoSource(processedUrl, true);
                 }
-
-                appLog('Download', 'Download complete. Assembling Blob...');
-                player.dlText.textContent = 'Processing file...';
-                
-                const blob = new Blob(chunks);
-                currentObjectUrl = URL.createObjectURL(blob);
-                
-                player.dlOver.classList.add('hidden');
-                player.dlBar.classList.remove('animate-pulse');
-                
-                // Assign Blob URL to Video
-                player.video.src = currentObjectUrl;
-                appLog('Download', 'Blob URL assigned to video player.');
-                showToast("Media loaded successfully.", "success");
-
-            } catch (error) {
-                appLog('Download', 'Fetch failed (likely CORS or Network issue). Executing Fallback.', error);
-                
-                // FALLBACK: Directly set the src. The browser handles CORS internally for <video> tags much better.
-                showToast("Download restricted. Falling back to direct stream...", "info");
-                
-                player.dlOver.classList.add('hidden');
-                player.dlBar.classList.remove('animate-pulse');
-                
-                player.video.src = processedUrl;
-                appLog('Fallback', 'Set video.src directly to bypass JS fetch restrictions.');
             }
         }
 
-        // Host setting the video
-        btns.setVideo.addEventListener('click', () => {
+        function applyVideoSource(srcString, isFallback = false) {
+            els.player.dlOverlay.classList.add('hidden');
+            
+            // Set flag to prevent immediate seek logic firing during load
+            isRemoteUpdatingSeek = true; 
+            
+            els.player.vid.src = srcString;
+            els.player.vid.load();
+            
+            if (!isFallback) {
+                showToast("Media loaded successfully.", "success");
+            }
+            appLog('Player', 'Video source applied.');
+        }
+
+        // Host trigger
+        els.btns.setVid.addEventListener('click', () => {
             if (currentRole !== 'host') return;
             
-            const rawUrl = inputs.videoUrl.value.trim();
-            if (rawUrl) {
-                appLog('Sync', 'Host pushing new video URL to Firebase.');
+            const urlVal = els.inputs.url.value.trim();
+            if (urlVal) {
+                appLog('Sync', 'Host broadcasting new URL to Firebase.');
                 roomRef.update({
-                    url: rawUrl,
+                    url: urlVal,
                     isPlaying: false,
                     time: 0,
                     lastUpdated: firebase.database.ServerValue.TIMESTAMP
                 });
-                inputs.videoUrl.value = '';
-                showToast("Broadcast link sent to room.", "success");
+                els.inputs.url.value = ''; // clear input
+                showToast("Broadcast sent to all members.", "success");
             }
         });
 
-        // --- STREAMING_CHUNK:Firebase Sync Engine (The Brains) ---
+        // --- STREAMING_CHUNK:Synchronization Engine ---
 
-        function setupFirebaseListeners() {
+        function initFirebaseSyncListeners() {
             roomRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (!data) return;
 
-                // 1. URL Sync & Download trigger
+                // 1. URL Sync & Download Process
                 if (data.url) {
-                    loadVideoWithFallback(data.url);
+                    executeMultiStageDownload(data.url);
                 } else {
-                    player.noVideoOver.classList.remove('hidden');
-                    player.video.src = "";
+                    resetPlayerState();
                 }
 
-                if (!data.url || !currentVideoSource) return; // Wait until media is configured
+                if (!data.url || !currentVideoSource) return;
 
-                // 2. Time Sync (Seek)
-                // If diff is > 1.5 seconds, force a seek to sync up.
-                const timeDiff = Math.abs(player.video.currentTime - data.time);
-                if (timeDiff > 1.5) {
-                    appLog('Sync', `Remote seek detected. Local: ${player.video.currentTime}, Remote: ${data.time}`);
-                    isRemoteUpdatingSeek = true; 
-                    player.video.currentTime = data.time;
-                }
-
-                // 3. Playback State Sync
-                if (data.isPlaying && player.video.paused) {
-                    appLog('Sync', 'Remote play detected. Playing local video.');
-                    isRemoteUpdatingPlay = true;
-                    player.video.play().catch(e => {
-                        appLog('Sync Error', "Autoplay prevented. User interaction needed.", e);
-                        showToast("Click play to synchronize.", "info");
-                        isRemoteUpdatingPlay = false; 
+                // 2. Play/Pause State Sync
+                // We check if the state differs from current local state
+                if (data.isPlaying && els.player.vid.paused) {
+                    appLog('Sync', 'Remote PLAY received.');
+                    isRemoteUpdatingPlay = true; // Set flag to block local event echo
+                    els.player.vid.play().catch(e => {
+                        appLog('Sync', 'Autoplay blocked by browser.', e);
+                        showToast("Click Play to sync with Host.", "warning");
+                        isRemoteUpdatingPlay = false;
                     });
-                } else if (!data.isPlaying && !player.video.paused) {
-                    appLog('Sync', 'Remote pause detected. Pausing local video.');
-                    isRemoteUpdatingPause = true;
-                    player.video.pause();
+                } else if (!data.isPlaying && !els.player.vid.paused) {
+                    appLog('Sync', 'Remote PAUSE received.');
+                    isRemoteUpdatingPause = true; // Set flag
+                    els.player.vid.pause();
+                }
+
+                // 3. Timeline Sync
+                // Allow a small buffer (1.5s) to avoid micro-stutters during normal playback
+                if (typeof data.time === 'number') {
+                    const localTime = els.player.vid.currentTime;
+                    const drift = Math.abs(localTime - data.time);
+                    
+                    if (drift > 1.5) {
+                        appLog('Sync', `Drift detected (${drift.toFixed(2)}s). Remote: ${data.time}, Local: ${localTime}. Seeking...`);
+                        isRemoteUpdatingSeek = true; // Set flag
+                        els.player.vid.currentTime = data.time;
+                    }
                 }
             });
         }
 
-        // Helper to update Firebase state
-        function pushRoomState(updates) {
+        function pushStateToFirebase(updates) {
             if (!roomRef) return;
             updates.lastUpdated = firebase.database.ServerValue.TIMESTAMP;
             roomRef.update(updates);
         }
 
-        // DOM Event: PLAY
-        player.video.addEventListener('play', () => {
+        // Local Player Event Listeners -> Push to Firebase
+        
+        els.player.vid.addEventListener('play', () => {
             if (isRemoteUpdatingPlay) {
-                appLog('Event', 'Play ignored (Remote origin)');
+                // Event was caused by Firebase, do NOT push back
+                appLog('Event', 'Local PLAY ignored (Triggered by Sync flag).');
                 isRemoteUpdatingPlay = false;
                 return;
             }
-            appLog('Event', 'Play captured (Local origin). Pushing to Firebase.');
-            pushRoomState({
+            appLog('Event', 'Local PLAY initiated by user. Pushing to Firebase.');
+            pushStateToFirebase({
                 isPlaying: true,
-                time: player.video.currentTime
+                time: els.player.vid.currentTime
             });
         });
 
-        // DOM Event: PAUSE
-        player.video.addEventListener('pause', () => {
+        els.player.vid.addEventListener('pause', () => {
             if (isRemoteUpdatingPause) {
-                appLog('Event', 'Pause ignored (Remote origin)');
+                appLog('Event', 'Local PAUSE ignored (Triggered by Sync flag).');
                 isRemoteUpdatingPause = false;
                 return;
             }
-            appLog('Event', 'Pause captured (Local origin). Pushing to Firebase.');
-            pushRoomState({
+            appLog('Event', 'Local PAUSE initiated by user. Pushing to Firebase.');
+            pushStateToFirebase({
                 isPlaying: false,
-                time: player.video.currentTime
+                time: els.player.vid.currentTime
             });
         });
 
-        // DOM Event: SEEKED (Fires when user finishes scrubbing)
-        player.video.addEventListener('seeked', () => {
+        els.player.vid.addEventListener('seeked', () => {
             if (isRemoteUpdatingSeek) {
-                appLog('Event', 'Seek ignored (Remote origin)');
+                appLog('Event', 'Local SEEK ignored (Triggered by Sync flag).');
                 isRemoteUpdatingSeek = false;
                 return;
             }
-            appLog('Event', `Seek captured (Local origin) to ${player.video.currentTime}. Pushing to Firebase.`);
-            pushRoomState({
-                time: player.video.currentTime
+            // User scrubbed the timeline manually
+            appLog('Event', `Local SEEK to ${els.player.vid.currentTime}. Pushing to Firebase.`);
+            pushStateToFirebase({
+                time: els.player.vid.currentTime
             });
         });
 
-        // Graceful disconnect on tab close
+        // Cleanup on window close
         window.addEventListener('beforeunload', () => {
-            if (roomRef) {
-                roomRef.off();
-            }
+            if (roomRef) roomRef.off();
         });
 
-        appLog('Init', 'Application ready.');
+        appLog('Init', 'SyncParty application logic completely loaded.');
     </script>
 </body>
 </html>
